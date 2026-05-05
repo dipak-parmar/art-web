@@ -58,11 +58,184 @@
     .section-glow { background: radial-gradient(ellipse at center, rgba(124,58,237,0.08) 0%, transparent 70%); }
 
     @media (pointer: coarse) { .custom-cursor { display: none !important; } }
+
+    /* Feedback Popup Styles */
+    #feedback-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 26, 46, 0.4);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    #feedback-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #feedback-popup {
+      background: #ffffff;
+      width: 90%;
+      max-width: 450px;
+      padding: 3rem 2rem;
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(88, 28, 135, 0.15);
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-align: center;
+    }
+
+    #feedback-overlay.show #feedback-popup {
+      transform: scale(1) translateY(0);
+    }
+
+    /* Abstract Background Shapes */
+    .popup-shape {
+      position: absolute;
+      z-index: 0;
+      filter: blur(40px);
+      border-radius: 50%;
+      opacity: 0.4;
+    }
+    .shape-1 {
+      width: 150px;
+      height: 150px;
+      background: #a855f7;
+      top: -50px;
+      left: -50px;
+    }
+    .shape-2 {
+      width: 120px;
+      height: 120px;
+      background: #c084fc;
+      bottom: -40px;
+      right: -40px;
+    }
+
+    .popup-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .popup-title {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #2e1065;
+      margin-bottom: 2rem;
+      line-height: 1.3;
+    }
+
+    .popup-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .feedback-btn {
+      padding: 0.8rem 2rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-yes {
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-yes:hover {
+      background: #6d28d9;
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+    }
+
+    .btn-no {
+      background: #fff;
+      color: #2e1065;
+      border: 2px solid #7c3aed;
+    }
+
+    .btn-no:hover {
+      background: #f5f3ff;
+      transform: scale(1.05);
+      border-color: #6d28d9;
+    }
+
+    .close-popup {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: none;
+      border: none;
+      color: #2e1065;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.3s;
+      z-index: 2;
+    }
+
+    .close-popup:hover {
+      opacity: 1;
+    }
+
+    #thank-you-msg {
+      display: none;
+    }
+
+    #thank-you-msg h2 {
+      color: #7c3aed;
+      font-size: 1.8rem;
+      font-weight: 900;
+    }
   </style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   <script src="/_sdk/resizing_sdk.js" type="text/javascript"></script>
      <link rel="icon" type="image/png" href="logo/1.png" />
  <body data-template-id="__page-root" style="background: rgb(255, 255, 255);">
+  <!-- Feedback Popup HTML -->
+  <div id="feedback-overlay">
+    <div id="feedback-popup">
+      <div class="popup-shape shape-1"></div>
+      <div class="popup-shape shape-2"></div>
+      
+      <button class="close-popup" id="close-popup">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <div id="popup-main-content" class="popup-content">
+        <h2 class="popup-title">Does this website suit your idea?</h2>
+        <div class="popup-buttons">
+          <button class="feedback-btn btn-yes" onclick="submitVote('yes')">
+            Yes 👍
+          </button>
+          <button class="feedback-btn btn-no" onclick="submitVote('no')">
+            No 👎
+          </button>
+        </div>
+      </div>
+
+      <div id="thank-you-msg" class="popup-content">
+        <i data-lucide="heart" class="w-16 h-16 text-purple-600 mx-auto mb-4 animate-bounce"></i>
+        <h2>Thank you!</h2>
+        <p class="text-purple-900/60 mt-2">Your feedback helps us grow.</p>
+      </div>
+    </div>
+  </div>
   <div id="loading-screen">
     <img src="logo/1.png" alt="ArtWeb Studio" class="h-20 object-contain drop-shadow-xl animate-pulse">
    <div class="progress-bar">
@@ -211,7 +384,7 @@
       <div class="web-card-image-container"><span data-template-id="web-card-2-tag" class="canva-tag web-card-tag" style="color: rgb(26, 26, 46); font-weight: 700;">Popular</span> <img data-template-id="web-card-2-image" class="canva-image web-card-image" loading="lazy" src="img/Screenshot 2026-05-05 115500.png" alt="A sleek office desk setup featuring Apple devices">
       </div>
       <div class="web-card-content">
-       <h3 data-template-id="web-card-2-title" class="canva-text text-xl font-bold mb-6" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 20px;">Business Website</h3>
+       <h3 data-template-id="web-card-2-title" class="canva-text text-xl font-bold mb- 6" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 20px;">Business Website</h3>
        <a href="https://dipak-parmar.github.io/NAILSBYMANSIBA/" target="_blank" rel="noopener noreferrer" data-template-id="web-card-2-btn" class="canva-button order-btn px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold text-sm shadow-lg hover:shadow-purple-500/40 transition-all text-center" style="font-weight: 600;">View Project</a>
       </div>
      </div>
@@ -424,7 +597,7 @@
         if (o.y < -100) o.y = canvas.height + 100;
         if (o.y > canvas.height + 100) o.y = -100;
         const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
-        g.addColorStop(0, `hsla(${o.hue}, 80%, 60%, 0.4)`);
+        g.addColorStop(0, `hsla(${o.hue}, 80%, 60%, 0.4)`)  ;
         g.addColorStop(1, `hsla(${o.hue}, 80%, 40%, 0)`);
         ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
         ctx.fillStyle = g; ctx.fill();
@@ -620,6 +793,82 @@
     });
 
     lucide.createIcons();
+
+    // --- FINAL FEEDBACK POPUP SYSTEM ---
+    const feedbackOverlay = document.getElementById('feedback-overlay');
+    const popupContent = document.getElementById('popup-main-content');
+    const thankYouMsg = document.getElementById('thank-you-msg');
+    const closePopupBtn = document.getElementById('close-popup');
+
+    // Show popup after scrolling 80% of the page (Guaranteed after 6 sections)
+    window.addEventListener('scroll', function() {
+      const scrollPercent = (window.pageYOffset + window.innerHeight) / document.documentElement.scrollHeight;
+      if (scrollPercent > 0.8) {
+        if (feedbackOverlay && !feedbackOverlay.classList.contains('show')) {
+          feedbackOverlay.classList.add('show');
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+      }
+    });
+
+    // Close logic
+    const closeFeedback = () => {
+      feedbackOverlay.classList.remove('show');
+    };
+    if(closePopupBtn) closePopupBtn.addEventListener('click', closeFeedback);
+    if(feedbackOverlay) feedbackOverlay.addEventListener('click', (e) => {
+      if (e.target === feedbackOverlay) closeFeedback();
+    });
+
+    // Submit Logic: Sends result to Email and Database
+    window.submitVote = async (answer) => {
+      try {
+        popupContent.style.opacity = '0.5';
+        popupContent.style.pointerEvents = 'none';
+
+        // 1. Send to Backend (Database)
+        fetch('http://localhost:3000/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ answer })
+        }).catch(e => console.log("DB offline"));
+
+        // 2. Fetch Stats Privately
+        let totalYes = "N/A", totalNo = "N/A";
+        try {
+          const statsRes = await fetch('http://localhost:3000/stats');
+          if (statsRes.ok) {
+            const stats = await statsRes.json();
+            totalYes = stats.yes;
+            totalNo = stats.no;
+          }
+        } catch (e) {}
+
+        // 3. Send to Email (FormSubmit AJAX)
+        const emailRes = await fetch('https://formsubmit.co/ajax/dipakparmar2466@gmail.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            _subject: "🌟 New Website Feedback Received!",
+            "User Selected": answer === 'yes' ? "YES 👍" : "NO 👎",
+            "--- PRIVATE STATS ---": "-----------------",
+            "Total Yes Votes": totalYes,
+            "Total No Votes": totalNo,
+            "Sent From": window.location.href
+          })
+        });
+
+        if (emailRes.ok) {
+          popupContent.style.display = 'none';
+          thankYouMsg.style.display = 'block';
+          setTimeout(closeFeedback, 3000);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        closeFeedback();
+      }
+    };
   </script>
+
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f6d6d57e0997e91',t:'MTc3Nzk1OTgwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body></html>
