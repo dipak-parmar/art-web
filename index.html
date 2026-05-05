@@ -800,8 +800,11 @@
     const thankYouMsg = document.getElementById('thank-you-msg');
     const closePopupBtn = document.getElementById('close-popup');
 
-    // Show popup after scrolling 80% of the page (Guaranteed after 6 sections)
+    // Show popup after scrolling 80% of the page
     window.addEventListener('scroll', function() {
+      // Don't show if they've already voted (persists after refresh)
+      if (localStorage.getItem('feedback_voted')) return;
+
       const scrollPercent = (window.pageYOffset + window.innerHeight) / document.documentElement.scrollHeight;
       if (scrollPercent > 0.8) {
         if (feedbackOverlay && !feedbackOverlay.classList.contains('show')) {
@@ -820,18 +823,18 @@
       if (e.target === feedbackOverlay) closeFeedback();
     });
 
-    // Submit Logic: Sends result to Email and Database
+    // Submit Logic
     window.submitVote = async (answer) => {
       try {
         popupContent.style.opacity = '0.5';
         popupContent.style.pointerEvents = 'none';
 
-        // 1. Send to Backend (Database)
+        // 1. Send to Backend
         fetch('http://localhost:3000/vote', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ answer })
-        }).catch(e => console.log("DB offline"));
+        }).catch(e => {});
 
         // 2. Fetch Stats Privately
         let totalYes = "N/A", totalNo = "N/A";
@@ -844,21 +847,22 @@
           }
         } catch (e) {}
 
-        // 3. Send to Email (FormSubmit AJAX)
+        // 3. Send to Email
         const emailRes = await fetch('https://formsubmit.co/ajax/dipakparmar2466@gmail.com', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             _subject: "🌟 New Website Feedback Received!",
             "User Selected": answer === 'yes' ? "YES 👍" : "NO 👎",
-            "--- PRIVATE STATS ---": "-----------------",
             "Total Yes Votes": totalYes,
-            "Total No Votes": totalNo,
-            "Sent From": window.location.href
+            "Total No Votes": totalNo
           })
         });
 
         if (emailRes.ok) {
+          // Mark as voted in localStorage (Persists even after closing browser)
+          localStorage.setItem('feedback_voted', 'true');
+          
           popupContent.style.display = 'none';
           thankYouMsg.style.display = 'block';
           setTimeout(closeFeedback, 3000);
