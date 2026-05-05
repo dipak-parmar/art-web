@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premium Digital Studio</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: #ffffff; color: #1a1a2e; overflow-x: hidden; }
+
+    #loading-screen { position: fixed; inset: 0; z-index: 9999; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s; }
+    #loading-screen.hidden { opacity: 0; pointer-events: none; }
+    .progress-bar { width: 200px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 2rem; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #7c3aed, #a855f7, #c084fc); animation: fillBar 2.5s ease forwards; }
+    @keyframes fillBar { to { width: 100%; } }
+
+    .custom-cursor { position: fixed; width: 20px; height: 20px; border-radius: 50%; background: rgba(88, 28, 135, 0.85); pointer-events: none; z-index: 9998; transition: transform 0.15s; box-shadow: 0 0 15px rgba(88, 28, 135, 0.6); backdrop-filter: blur(2px); }
+    .custom-cursor.expanded { transform: scale(2.5); }
+
+    .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+
+    .marquee-track { display: flex; width: max-content; }
+    .marquee-top .marquee-track { animation: scrollLeft 20s linear infinite; }
+    .marquee-mid .marquee-track { animation: scrollRight 30s linear infinite; }
+    @keyframes scrollLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    @keyframes scrollRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+
+    #hero-canvas { position: absolute; inset: 0; z-index: 0; }
+
+    .tilt-card { transition: transform 0.1s ease, box-shadow 0.3s; transform-style: preserve-3d; perspective: 800px; }
+    .tilt-card:hover { box-shadow: 0 0 30px rgba(168,85,247,0.3); }
+
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.7s, transform 0.7s; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .ripple { position: absolute; border-radius: 50%; background: rgba(168,85,247,0.4); transform: scale(0); animation: rippleAnim 0.6s forwards; pointer-events: none; }
+    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+    .magnetic-btn { position: relative; overflow: hidden; transition: transform 0.2s ease; }
+
+    .testimonial-slide { transition: opacity 0.5s, transform 0.5s; }
+
+    /* Website cards */
+    .web-card { position: relative; border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.04); backdrop-filter: blur(12px); border: 1px solid rgba(168,85,247,0.2); transition: transform 0.1s, box-shadow 0.3s, border-color 0.3s; transform-style: preserve-3d; perspective: 800px; display: flex; flex-direction: column; height: 100%; }
+    .web-card:hover { box-shadow: 0 0 40px rgba(168,85,247,0.35); border-color: rgba(168,85,247,0.5); }
+    .web-card-image-container { position: relative; width: 100%; height: 200px; overflow: hidden; flex-shrink: 0; }
+    .web-card-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+    .web-card:hover .web-card-image { transform: scale(1.05); }
+    .web-card-content { padding: 2rem; display: flex; flex-direction: column; flex: 1; }
+    .web-card .order-btn { margin-top: auto; transition: transform 0.3s, box-shadow 0.3s; }
+    .web-card:hover .order-btn { transform: scale(1.02); }
+    .web-card-tag { position: absolute; top: 8px; right: 16px; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; z-index: 10; }
+
+    .section-glow { background: radial-gradient(ellipse at center, rgba(124,58,237,0.08) 0%, transparent 70%); }
+
+    @media (pointer: coarse) { .custom-cursor { display: none !important; } }
+  </style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/resizing_sdk.js" type="text/javascript"></script>
+     <link rel="icon" type="image/png" href="logo/1.png" />
+ <body data-template-id="__page-root" style="background: rgb(255, 255, 255);">
+  <div id="loading-screen">
+    <img src="logo/1.png" alt="ArtWeb Studio" class="h-20 object-contain drop-shadow-xl animate-pulse">
+   <div class="progress-bar">
+    <div class="progress-fill"></div>
+   </div>
+  </div>
+  <div class="custom-cursor" id="cursor"></div>
+   <nav class="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 rounded-full bg-purple-100/70 backdrop-blur-xl border border-purple-200 shadow-[0_8px_32px_rgba(168,85,247,0.2)] px-5 py-3 md:px-8 md:py-4 flex items-center justify-between transition-all duration-300" id="navbar">
+    <div class="flex items-center gap-3">
+     <img src="logo/1.png" alt="leo9 Logo" class="h-10 md:h-12 object-contain drop-shadow-md">
+    </div>
+    <div class="flex items-center gap-4">
+     <div class="hidden md:flex items-center gap-5 mr-2">
+      <a href="#home" class="text-sm font-bold text-purple-900/70 hover:text-purple-600 transition-colors">Home</a>
+      <a href="#services" class="text-sm font-bold text-purple-900/70 hover:text-purple-600 transition-colors">Services</a>
+      <a href="#process" class="text-sm font-bold text-purple-900/70 hover:text-purple-600 transition-colors">Process</a>
+      <a href="#websites" class="text-sm font-bold text-purple-900/70 hover:text-purple-600 transition-colors">Websites</a>
+      <a href="#service-menu" class="text-sm font-bold text-purple-900/70 hover:text-purple-600 transition-colors">Pricing</a>
+      <a href="#contact" class="text-sm font-bold text-purple-900/70 hover:text-purple-600 transition-colors">Contact</a>
+     </div>
+     <a href="https://www.instagram.com/artweb.studio15/" target="_blank" rel="noopener noreferrer" data-template-id="nav-contact-btn" class="canva-button magnetic-btn hidden md:inline-flex px-5 py-2 md:px-6 md:py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white text-sm md:text-base font-semibold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 transition-all" style="color: rgb(255, 255, 255); font-weight: 600;">Contact</a>
+     <!-- Mobile Hamburger -->
+     <button id="mobile-menu-btn" class="md:hidden flex flex-col gap-1.5 p-2 rounded-lg hover:bg-purple-200/50 transition" aria-label="Open menu">
+      <span class="block w-5 h-0.5 bg-purple-800 transition-all" id="hb1"></span>
+      <span class="block w-5 h-0.5 bg-purple-800 transition-all" id="hb2"></span>
+      <span class="block w-5 h-0.5 bg-purple-800 transition-all" id="hb3"></span>
+     </button>
+    </div>
+   </nav>
+   <!-- Mobile Dropdown Menu -->
+   <div id="mobile-menu" class="hidden fixed top-20 left-4 right-4 z-50 rounded-2xl bg-white/95 backdrop-blur-xl border border-purple-200 shadow-2xl p-6 flex flex-col gap-4 md:hidden">
+    <a href="#home" class="mobile-nav-link text-base font-bold text-purple-900 hover:text-purple-600 transition-colors py-1 border-b border-purple-100">🏠 Home</a>
+    <a href="#services" class="mobile-nav-link text-base font-bold text-purple-900 hover:text-purple-600 transition-colors py-1 border-b border-purple-100">🎨 Services</a>
+    <a href="#process" class="mobile-nav-link text-base font-bold text-purple-900 hover:text-purple-600 transition-colors py-1 border-b border-purple-100">⚡ Our Process</a>
+    <a href="#websites" class="mobile-nav-link text-base font-bold text-purple-900 hover:text-purple-600 transition-colors py-1 border-b border-purple-100">🌐 Websites</a>
+    <a href="#service-menu" class="mobile-nav-link text-base font-bold text-purple-900 hover:text-purple-600 transition-colors py-1 border-b border-purple-100">💰 Pricing</a>
+    <a href="#contact" class="mobile-nav-link text-base font-bold text-purple-900 hover:text-purple-600 transition-colors py-1 border-b border-purple-100">📬 Contact</a>
+    <a href="https://www.instagram.com/artweb.studio15/" target="_blank" rel="noopener noreferrer" class="mt-2 text-center px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold text-sm shadow-lg">📸 Order on Instagram</a>
+   </div>
+   <div class="marquee-top absolute top-[5.5rem] md:top-[6.5rem] left-0 right-0 z-40 py-2 bg-gradient-to-r from-purple-700 via-purple-600 to-violet-700 overflow-hidden shadow-lg">
+   <div class="marquee-track">
+    <span data-template-id="marquee-top-text" class="canva-text text-sm font-medium whitespace-nowrap px-4" style="color: rgb(255, 255, 255);">🔥 SALE • Affordable • Premium Design • Try First Pay Later 🔥     🔥 SALE • Affordable • Premium Design • Try First Pay Later 🔥    </span> <span class="text-sm font-medium whitespace-nowrap px-4" aria-hidden="true">🔥 SALE • Affordable • Premium Design • Try First Pay Later 🔥 &nbsp;&nbsp;&nbsp; 🔥 SALE • Affordable • Premium Design • Try First Pay Later 🔥 &nbsp;&nbsp;&nbsp;</span>
+   </div>
+  </div>
+  <section id="home" class="relative w-full" style="height: calc(100 * min(var(--vh, 1vh), 1vh));">
+   <canvas id="hero-canvas"></canvas>
+   <div class="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
+    <h1 data-template-id="hero-heading" class="canva-text text-4xl md:text-6xl lg:text-7xl font-black max-w-4xl leading-tight reveal" style="color: rgb(26, 26, 46); font-weight: 900; font-size: 32px;">We Build Premium Digital Experiences</h1>
+    <p data-template-id="hero-subtext" class="canva-text text-lg md:text-xl mt-6 opacity-70 reveal" style="color: rgb(74, 74, 74);">Design • Animation • Websites</p>
+    <div class="flex flex-wrap gap-4 mt-10">
+     <a href="https://www.instagram.com/artweb.studio15/" target="_blank" rel="noopener noreferrer" data-template-id="hero-cta-primary" class="canva-button magnetic-btn glass px-8 py-4 rounded-full font-semibold text-white hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all reveal" style="color: rgb(26, 26, 46); font-weight: 600;">Start Project</a> <a href="https://www.instagram.com/artweb.studio15/" target="_blank" rel="noopener noreferrer" data-template-id="hero-cta-secondary" class="canva-button magnetic-btn glass px-8 py-4 rounded-full font-semibold text-white hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all reveal" style="color: rgb(26, 26, 46); font-weight: 600;">Order on Instagram</a>
+    </div>
+   </div>
+  </section>
+  <div class="marquee-mid py-4 bg-gray-100 overflow-hidden">
+   <div class="marquee-track">
+    <span data-template-id="marquee-mid-text" class="canva-text text-sm whitespace-nowrap px-4 text-purple-600" style="color: rgb(147, 51, 234);">Creative • Modern • Fast Delivery • Unique Designs     Creative • Modern • Fast Delivery • Unique Designs    </span> <span class="text-sm whitespace-nowrap px-4 text-purple-600" aria-hidden="true">Creative • Modern • Fast Delivery • Unique Designs &nbsp;&nbsp;&nbsp; Creative • Modern • Fast Delivery • Unique Designs &nbsp;&nbsp;&nbsp;</span>
+   </div>
+  </div>
+  <section id="services" class="py-32 px-6 section-glow">
+   <div class="max-w-7xl mx-auto">
+    <h2 data-template-id="services-heading" class="canva-text text-3xl md:text-5xl font-black text-center reveal" style="color: rgb(26, 26, 46); font-weight: 900; font-size: 24px;">Our Services</h2>
+    <p data-template-id="services-subtitle" class="canva-text text-center mt-4 opacity-60 reveal" style="color: rgb(102, 102, 102);">Premium design solutions at unbeatable prices</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
+     <div class="tilt-card glass rounded-2xl p-8 reveal"><i data-lucide="pen-tool" class="w-10 h-10 text-purple-400 mb-4"></i>
+      <h3 data-template-id="service-card-1-title" class="canva-text text-xl font-bold" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 19px;">Logo Design</h3>
+      <p data-template-id="service-card-1-price" class="canva-text mt-2 text-purple-300 font-semibold" style="color: rgb(192, 132, 252); font-weight: 600;">₹50</p>
+     </div>
+     <div class="tilt-card glass rounded-2xl p-8 reveal"><i data-lucide="image" class="w-10 h-10 text-purple-400 mb-4"></i>
+      <h3 data-template-id="service-card-2-title" class="canva-text text-xl font-bold" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 19px;">Photo Editing</h3>
+      <p data-template-id="service-card-2-price" class="canva-text mt-2 text-purple-300 font-semibold" style="color: rgb(192, 132, 252); font-weight: 600;">₹100</p>
+     </div>
+     <div class="tilt-card glass rounded-2xl p-8 reveal"><i data-lucide="credit-card" class="w-10 h-10 text-purple-400 mb-4"></i>
+      <h3 data-template-id="service-card-3-title" class="canva-text text-xl font-bold" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 19px;">Card Design</h3>
+      <p data-template-id="service-card-3-price" class="canva-text mt-2 text-purple-300 font-semibold" style="color: rgb(192, 132, 252); font-weight: 600;">₹40</p>
+     </div>
+     <div class="tilt-card glass rounded-2xl p-8 reveal"><i data-lucide="heart" class="w-10 h-10 text-purple-400 mb-4"></i>
+      <h3 data-template-id="service-card-4-title" class="canva-text text-xl font-bold" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 19px;">Wedding Card</h3>
+      <p data-template-id="service-card-4-price" class="canva-text mt-2 text-purple-300 font-semibold" style="color: rgb(192, 132, 252); font-weight: 600;">₹100</p>
+     </div>
+     <div class="tilt-card glass rounded-2xl p-8 reveal"><i data-lucide="megaphone" class="w-10 h-10 text-purple-400 mb-4"></i>
+      <h3 data-template-id="service-card-5-title" class="canva-text text-xl font-bold" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 19px;">Promo Post</h3>
+      <p data-template-id="service-card-5-price" class="canva-text mt-2 text-purple-300 font-semibold" style="color: rgb(192, 132, 252); font-weight: 600;">₹200</p>
+     </div>
+     <div class="tilt-card glass rounded-2xl p-8 reveal"><i data-lucide="globe" class="w-10 h-10 text-purple-400 mb-4"></i>
+      <h3 data-template-id="service-card-6-title" class="canva-text text-xl font-bold" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 19px;">Website</h3>
+      <p data-template-id="service-card-6-price" class="canva-text mt-2 text-purple-300 font-semibold" style="color: rgb(192, 132, 252); font-weight: 600;">₹1k – ₹10k</p>
+     </div>
+    </div>
+   </div>
+  </section>
+   <section id="process" class="py-32 px-6">
+   <div class="max-w-7xl mx-auto">
+    <h2 data-template-id="story-heading" class="canva-text text-3xl md:text-5xl font-black mb-16 text-center reveal" style="color: rgb(26, 26, 46); font-weight: 900;">Our Process</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+     <!-- Left: Sticky Video in Square -->
+     <div class="lg:sticky lg:top-32 w-full aspect-square rounded-[2rem] overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.3)] border border-purple-200/30 reveal">
+      <video autoplay loop muted playsinline class="w-full h-full object-cover">
+       <source src="video/A modern 3D scene on a white background with purple accents. A silver laptop with black keyboard sits in center. Holographic purple UI screens appear around it showing coding, website layouts, and graphic design to.mp4" type="video/mp4">
+      </video>
+     </div>
+     <!-- Right: 3 Boxes -->
+     <div class="space-y-8 pb-10">
+      <div class="glass rounded-3xl p-8 lg:p-10 border border-purple-200/30 shadow-lg reveal transform transition duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] hover:border-purple-300">
+       <h3 data-template-id="story-panel-1-title" class="canva-text text-2xl font-bold text-purple-600 mb-4" style="color: rgb(147, 51, 234); font-weight: 700;">01 — Discover</h3>
+       <p data-template-id="story-panel-1-desc" class="canva-text text-lg opacity-80 leading-relaxed" style="color: rgb(74, 74, 74);">We listen to your vision, research your audience, and define the creative direction.</p>
+      </div>
+      <div class="glass rounded-3xl p-8 lg:p-10 border border-purple-200/30 shadow-lg reveal transform transition duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] hover:border-purple-300">
+       <h3 data-template-id="story-panel-2-title" class="canva-text text-2xl font-bold text-purple-600 mb-4" style="color: rgb(147, 51, 234); font-weight: 700;">02 — Design</h3>
+       <p data-template-id="story-panel-2-desc" class="canva-text text-lg opacity-80 leading-relaxed" style="color: rgb(74, 74, 74);">Our team crafts stunning visuals with meticulous attention to every pixel.</p>
+      </div>
+      <div class="glass rounded-3xl p-8 lg:p-10 border border-purple-200/30 shadow-lg reveal transform transition duration-300 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] hover:border-purple-300">
+       <h3 data-template-id="story-panel-3-title" class="canva-text text-2xl font-bold text-purple-600 mb-4" style="color: rgb(147, 51, 234); font-weight: 700;">03 — Deliver</h3>
+       <p data-template-id="story-panel-3-desc" class="canva-text text-lg opacity-80 leading-relaxed" style="color: rgb(74, 74, 74);">Final assets are polished, packaged, and delivered fast — ready to impress.</p>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section><!-- Premium Website Solutions -->
+  <section id="websites" class="py-32 px-6 section-glow">
+   <div class="max-w-7xl mx-auto">
+    <h2 data-template-id="websites-heading" class="canva-text text-3xl md:text-5xl font-black text-center reveal" style="color: rgb(26, 26, 46); font-weight: 900; font-size: 24px;">Premium Website Solutions</h2>
+    <p data-template-id="websites-subtitle" class="canva-text text-center mt-4 opacity-60 reveal" style="color: rgb(102, 102, 102);">Modern, Fast &amp; Affordable Websites</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-16" style="grid-auto-rows: 1fr;">
+     <div class="web-card tilt-card reveal">
+      <div class="web-card-image-container"><img data-template-id="web-card-1-image" class="canva-image web-card-image" loading="lazy" src="img/Screenshot 2026-05-05 115208.png" alt="A clean, minimalist workspace featuring a laptop with images on the screen">
+      </div>
+      <div class="web-card-content">
+       <h3 data-template-id="web-card-1-title" class="canva-text text-xl font-bold mb-6" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 20px;">Starter Website</h3>
+       <a href="https://dipak-parmar.github.io/DIPAK-S-PORTFOLIO/" target="_blank" rel="noopener noreferrer" data-template-id="web-card-1-btn" class="canva-button order-btn px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold text-sm shadow-lg hover:shadow-purple-500/40 transition-all text-center" style="font-weight: 600;">View Project</a>
+      </div>
+     </div>
+     <div class="web-card tilt-card reveal">
+      <div class="web-card-image-container"><span data-template-id="web-card-2-tag" class="canva-tag web-card-tag" style="color: rgb(26, 26, 46); font-weight: 700;">Popular</span> <img data-template-id="web-card-2-image" class="canva-image web-card-image" loading="lazy" src="img/Screenshot 2026-05-05 115500.png" alt="A sleek office desk setup featuring Apple devices">
+      </div>
+      <div class="web-card-content">
+       <h3 data-template-id="web-card-2-title" class="canva-text text-xl font-bold mb-6" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 20px;">Business Website</h3>
+       <a href="https://dipak-parmar.github.io/NAILSBYMANSIBA/" target="_blank" rel="noopener noreferrer" data-template-id="web-card-2-btn" class="canva-button order-btn px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold text-sm shadow-lg hover:shadow-purple-500/40 transition-all text-center" style="font-weight: 600;">View Project</a>
+      </div>
+     </div>
+     <div class="web-card tilt-card reveal">
+      <div class="web-card-image-container"><img data-template-id="web-card-3-image" class="canva-image web-card-image" loading="lazy" src="img/Screenshot 2026-05-05 120304.png" alt="A well-organized design workspace with dual monitors">
+      </div>
+      <div class="web-card-content">
+       <h3 data-template-id="web-card-3-title" class="canva-text text-xl font-bold mb-6" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 20px;">Portfolio Design</h3>
+       <a href="https://watch-3d-theta.vercel.app/" target="_blank" rel="noopener noreferrer" data-template-id="web-card-3-btn" class="canva-button order-btn px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold text-sm shadow-lg hover:shadow-purple-500/40 transition-all text-center" style="font-weight: 600;">View Project</a>
+      </div>
+     </div>
+     <div class="web-card tilt-card reveal">
+      <div class="web-card-image-container"> <img data-template-id="web-card-4-image" class="canva-image web-card-image" loading="lazy" src="img/Screenshot 2026-05-05 120347.png" alt="Woman using smartphone for online shopping">
+      </div>
+      <div class="web-card-content">
+       <h3 data-template-id="web-card-4-title" class="canva-text text-xl font-bold mb-6" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 20px;">Online Store</h3>
+       <a href="https://dipak-parmar.github.io/pizza/" target="_blank" rel="noopener noreferrer" data-template-id="web-card-4-btn" class="canva-button order-btn px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold text-sm shadow-lg hover:shadow-purple-500/40 transition-all text-center" style="font-weight: 600;">View Project</a>
+      </div>
+     </div>
+     <div class="web-card tilt-card reveal">
+      <div class="web-card-image-container"><img data-template-id="web-card-5-image" class="canva-image web-card-image" loading="lazy" src="img/Screenshot 2026-05-05 120419.png" alt="Close-up of a computer screen displaying programming code">
+      </div>
+      <div class="web-card-content">
+       <h3 data-template-id="web-card-5-title" class="canva-text text-xl font-bold mb-6" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 20px;">Custom Project</h3>
+       <a href="https://dipak-parmar.github.io/solario/" target="_blank" rel="noopener noreferrer" data-template-id="web-card-5-btn" class="canva-button order-btn px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold text-sm shadow-lg hover:shadow-purple-500/40 transition-all text-center" style="font-weight: 600;">View Project</a>
+      </div>
+     </div>
+     <div class="web-card tilt-card reveal">
+      <div class="web-card-image-container"><img data-template-id="web-card-6-image" class="canva-image web-card-image" loading="lazy" src="img/Screenshot 2026-05-05 120506.png" alt="Modern desk setup with neon lighting and desktop computer">
+      </div>
+      <div class="web-card-content">
+       <h3 data-template-id="web-card-6-title" class="canva-text text-xl font-bold mb-6" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 20px;">Landing Page</h3>
+       <a href="https://thrift-cdxw.vercel.app/" target="_blank" rel="noopener noreferrer" data-template-id="web-card-6-btn" class="canva-button order-btn px-6 py-2.5 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 text-white font-semibold text-sm shadow-lg hover:shadow-purple-500/40 transition-all text-center" style="font-weight: 600;">View Project</a>
+      </div>
+     </div>
+    </div>
+   </div>
+  </section><!-- Service Price Menu Poster -->
+  <section id="service-menu" class="py-20 md:py-32 px-4 sm:px-6">
+   <div class="max-w-2xl mx-auto relative">
+    <!-- Background glow shapes -->
+    <div class="absolute inset-0 -z-10 rounded-3xl" style="background: radial-gradient(ellipse at 30% 20%, rgba(124,58,237,0.15) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(168,85,247,0.1) 0%, transparent 50%);"></div>
+    <div class="glass rounded-3xl p-6 sm:p-8 md:p-12 border border-purple-200/20 shadow-2xl reveal">
+     <!-- Badge -->
+     <div class="flex justify-start sm:justify-end mb-6">
+      <span data-template-id="menu-badge" class="canva-tag px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-purple-600 to-violet-600 text-white shadow-md">Custom Websites Available</span>
+     </div><!-- Title & Subtitle -->
+     <h2 data-template-id="menu-title" class="canva-text text-2xl sm:text-3xl md:text-4xl font-black text-center text-gray-900">Digital Editing &amp; Design Services</h2>
+     <p data-template-id="menu-subtitle" class="canva-text text-center mt-3 opacity-70 text-sm sm:text-base md:text-lg text-gray-700">High Quality Work at Affordable Prices</p><!-- Menu Items -->
+     <div class="space-y-4 sm:space-y-5 mt-8 md:mt-12">
+      <!-- Item 1 -->
+      <div class="flex items-center gap-3 sm:gap-4 pb-4 border-b border-gray-200/30">
+       <i data-lucide="pen-tool" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0"></i>
+       <h3 data-template-id="menu-item-1-name" class="canva-text flex-1 font-medium text-sm sm:text-base text-gray-900 leading-tight">Logo Design</h3>
+       <p data-template-id="menu-item-1-price" class="canva-text font-bold text-sm sm:text-base text-purple-600 flex-shrink-0">₹50</p>
+      </div><!-- Item 2 -->
+      <div class="flex items-center gap-3 sm:gap-4 pb-4 border-b border-gray-200/30">
+       <i data-lucide="image" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0"></i>
+       <h3 data-template-id="menu-item-2-name" class="canva-text flex-1 font-medium text-sm sm:text-base text-gray-900 leading-tight">Photo Editing</h3>
+       <p data-template-id="menu-item-2-price" class="canva-text font-bold text-sm sm:text-base text-purple-600 flex-shrink-0">₹100</p>
+      </div><!-- Item 3 -->
+      <div class="flex items-center gap-3 sm:gap-4 pb-4 border-b border-gray-200/30">
+       <i data-lucide="credit-card" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0"></i>
+       <h3 data-template-id="menu-item-3-name" class="canva-text flex-1 font-medium text-sm sm:text-base text-gray-900 leading-tight">Card Design</h3>
+       <p data-template-id="menu-item-3-price" class="canva-text font-bold text-sm sm:text-base text-purple-600 flex-shrink-0">₹40</p>
+      </div><!-- Item 4 -->
+      <div class="flex items-center gap-3 sm:gap-4 pb-4 border-b border-gray-200/30">
+       <i data-lucide="heart" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0"></i>
+       <h3 data-template-id="menu-item-4-name" class="canva-text flex-1 font-medium text-sm sm:text-base text-gray-900 leading-tight">Marriage &amp; Engagement Card</h3>
+       <p data-template-id="menu-item-4-price" class="canva-text font-bold text-sm sm:text-base text-purple-600 flex-shrink-0">₹100</p>
+      </div><!-- Item 5 -->
+      <div class="flex items-center gap-3 sm:gap-4 pb-4 border-b border-gray-200/30">
+       <i data-lucide="megaphone" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0"></i>
+       <h3 data-template-id="menu-item-5-name" class="canva-text flex-1 font-medium text-sm sm:text-base text-gray-900 leading-tight">Promotional Product Poster</h3>
+       <p data-template-id="menu-item-5-price" class="canva-text font-bold text-sm sm:text-base text-purple-600 flex-shrink-0">₹200</p>
+      </div><!-- Item 6 -->
+      <div class="flex items-center gap-3 sm:gap-4 pt-2">
+       <i data-lucide="globe" class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0"></i>
+       <h3 data-template-id="menu-item-6-name" class="canva-text flex-1 font-medium text-sm sm:text-base text-gray-900 leading-tight">Website Design &amp; Development</h3>
+       <p data-template-id="menu-item-6-price" class="canva-text font-bold text-sm sm:text-base text-purple-600 flex-shrink-0">₹1,000 – ₹10,000</p>
+      </div>
+     </div><!-- Footer contact area -->
+     <div class="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-gray-200/30 text-center">
+       <p data-template-id="menu-contact-heading" class="canva-text font-bold text-gray-900 mb-2 text-sm md:text-base">Contact for Orders</p>
+      </div>
+     </div>
+    </div>
+   </section><!-- Contact -->
+  <section id="contact" class="py-32 px-6 section-glow">
+   <div class="max-w-2xl mx-auto">
+    <h2 data-template-id="contact-heading" class="canva-text text-3xl md:text-5xl font-black text-center mb-12 reveal" style="color: rgb(26, 26, 46); font-weight: 900; font-size: 24px;">Let's Create Something Premium</h2>
+    <form id="contact-form" action="https://formsubmit.co/dipakparmar2466@gmail.com" method="POST" class="glass rounded-2xl p-8 space-y-6 reveal">
+      <!-- Formsubmit config -->
+      <input type="hidden" name="_subject" value="🌟 New Message from ArtWeb Studio Website!">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_template" value="table">
+      <div>
+       <label class="canva-text block text-sm font-medium mb-2" for="name-input" style="color: rgb(26, 26, 46); font-weight: 500;">Your Name</label>
+       <input id="name-input" name="name" type="text" required placeholder="Enter your name" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-purple-500">
+      </div>
+      <div>
+       <label class="canva-text block text-sm font-medium mb-2" for="phone-input" style="color: rgb(26, 26, 46); font-weight: 500;">Phone / WhatsApp</label>
+       <input id="phone-input" name="phone" type="tel" placeholder="Your phone number (optional)" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-purple-500">
+      </div>
+      <div>
+       <label class="canva-text block text-sm font-medium mb-2" for="message-input" style="color: rgb(26, 26, 46); font-weight: 500;">Message</label>
+       <textarea id="message-input" name="message" rows="4" required placeholder="Tell us about your project..." class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-purple-500"></textarea>
+      </div>
+      <div class="flex flex-wrap gap-4">
+       <button type="submit" class="canva-button magnetic-btn px-8 py-3 rounded-full font-semibold bg-purple-600 hover:bg-purple-500 transition" style="background: rgb(124, 58, 237); color: rgb(255, 255, 255); font-weight: 600;">Send Message 🚀</button>
+       <a href="https://www.instagram.com/artweb.studio15/" target="_blank" rel="noopener noreferrer" class="canva-button magnetic-btn glass px-8 py-3 rounded-full font-semibold hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] transition" style="color: rgb(26, 26, 46); font-weight: 600;">📸 Instagram</a>
+      </div>
+      <p id="form-success" class="text-green-500 font-medium hidden">✅ Message sent! We'll get back to you soon.</p>
+     </form>
+   </div>
+  </section>
+
+  <!-- Interactive Skills Section -->
+  <section id="interactive-skills" class="py-32 px-6 relative overflow-hidden bg-white">
+   <!-- Subtle purple gradient lighting -->
+   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+   
+   <div class="max-w-7xl mx-auto relative z-10 text-center mb-16">
+    <h2 class="canva-text text-3xl md:text-5xl font-black reveal" style="color: rgb(26, 26, 46); font-weight: 900;">Creative Arsenal</h2>
+    <p class="canva-text mt-4 opacity-60 text-lg reveal">Hover and interact with our floating capabilities</p>
+   </div>
+
+   <div id="skills-container" class="relative w-full h-[500px] md:h-[600px] mx-auto max-w-6xl rounded-[2.5rem] border border-purple-200/50 bg-gray-50/30 shadow-inner overflow-hidden reveal">
+      <!-- Background particles container -->
+      <div id="skills-particles" class="absolute inset-0 pointer-events-none opacity-50"></div>
+   </div>
+  </section>
+
+  <footer class="w-full bg-white border-t border-gray-200"><!-- Trust Badge Strip -->
+   <div data-template-id="footer-trust-strip" class="canva-section w-full bg-gradient-to-r from-purple-700 to-purple-600 text-white py-3 px-6 text-center" style="background: linear-gradient(to right, rgb(124, 58, 237), rgb(124, 58, 237));">
+    <p class="text-sm font-semibold">✔ Trusted Service • No Hidden Charges • Real Support</p>
+   </div><!-- Main Footer Content -->
+   <div class="py-16 px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12"><!-- Column 1: Brand -->
+     <div>
+      <img src="logo/1.png" alt="leo9 Logo" class="h-12 object-contain mb-4">
+      <p data-template-id="footer-brand-desc" class="canva-text text-sm opacity-70 mb-4" style="color: rgb(74, 74, 74); font-size: 14px;">Premium digital design solutions crafted for ambitious businesses. We transform ideas into stunning visual experiences.</p>
+      <p data-template-id="footer-brand-trust" class="canva-text text-xs opacity-60" style="color: rgb(153, 153, 153); font-size: 12px;">🔒 Your trust is our priority. 100% satisfaction guaranteed.</p>
+     </div><!-- Column 2: Services -->
+     <div>
+      <h3 data-template-id="footer-services-heading" class="canva-text font-bold text-sm mb-4" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 14px;">Our Services</h3>
+      <ul class="space-y-2">
+       <li><p data-template-id="footer-service-1" class="canva-text text-sm opacity-70 hover:opacity-100 transition" style="color: rgb(74, 74, 74); font-size: 13px;">Logo Design</p></li>
+       <li><p data-template-id="footer-service-2" class="canva-text text-sm opacity-70 hover:opacity-100 transition" style="color: rgb(74, 74, 74); font-size: 13px;">Photo Editing</p></li>
+       <li><p data-template-id="footer-service-3" class="canva-text text-sm opacity-70 hover:opacity-100 transition" style="color: rgb(74, 74, 74); font-size: 13px;">Card Design</p></li>
+       <li><p data-template-id="footer-service-4" class="canva-text text-sm opacity-70 hover:opacity-100 transition" style="color: rgb(74, 74, 74); font-size: 13px;">Wedding Cards</p></li>
+       <li><p data-template-id="footer-service-5" class="canva-text text-sm opacity-70 hover:opacity-100 transition" style="color: rgb(74, 74, 74); font-size: 13px;">Website Design</p></li>
+      </ul>
+     </div><!-- Column 3: Contact -->
+     <div>
+      <h3 data-template-id="footer-contact-heading" class="canva-text font-bold text-sm mb-4" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 14px;">Get in Touch</h3>
+      <ul class="space-y-3">
+       <li><a data-template-id="footer-contact-instagram" href="https://www.instagram.com/artweb.studio15/" target="_blank" rel="noopener noreferrer" class="canva-link text-sm opacity-70 hover:opacity-100 transition inline-block" style="color: rgb(124, 58, 237); font-weight: 600; font-size: 13px;">📸 @artweb.studio15</a></li>
+       <li><a href="https://www.instagram.com/artweb.studio15/" target="_blank" rel="noopener noreferrer" data-template-id="footer-contact-btn" class="canva-button text-sm px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-500 transition font-medium inline-block" style="background: rgb(124, 58, 237); color: rgb(255, 255, 255); font-weight: 600; font-size: 12px;">Chat on Instagram</a></li>
+      </ul>
+     </div><!-- Column 4: Trust Points -->
+     <div>
+      <h3 data-template-id="footer-trust-heading" class="canva-text font-bold text-sm mb-4" style="color: rgb(26, 26, 46); font-weight: 700; font-size: 14px;">Why Trust Us</h3>
+      <ul class="space-y-3">
+       <li class="flex items-start gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0"></i> <p data-template-id="footer-trust-1" class="canva-text text-sm opacity-70" style="color: rgb(74, 74, 74); font-size: 13px;">Fast Delivery</p></li>
+       <li class="flex items-start gap-2"><i data-lucide="shield" class="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0"></i> <p data-template-id="footer-trust-2" class="canva-text text-sm opacity-70" style="color: rgb(74, 74, 74); font-size: 13px;">Secure &amp; Reliable</p></li>
+       <li class="flex items-start gap-2"><i data-lucide="star" class="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0"></i> <p data-template-id="footer-trust-3" class="canva-text text-sm opacity-70" style="color: rgb(74, 74, 74); font-size: 13px;">Premium Quality</p></li>
+       <li class="flex items-start gap-2"><i data-lucide="heart" class="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0"></i> <p data-template-id="footer-trust-4" class="canva-text text-sm opacity-70" style="color: rgb(74, 74, 74); font-size: 13px;">24/7 Support</p></li>
+      </ul>
+     </div>
+    </div>
+   </div><!-- Bottom Bar -->
+   <div class="border-t border-gray-200 bg-gray-50 py-6 px-6 text-center">
+    <p data-template-id="footer-tagline" class="canva-text text-xs opacity-50" style="color: rgb(128, 128, 128); font-size: 11px;">Built with trust and quality service</p>
+   </div>
+  </footer>
+  <script src="/_sdk/editing_sdk.js"></script>
+  <script>
+    setTimeout(() => document.getElementById('loading-screen').classList.add('hidden'), 2800);
+
+    const cursor = document.getElementById('cursor');
+    let cx = 0, cy = 0, tx = 0, ty = 0;
+    document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+    function animateCursor() {
+      cx += (tx - cx) * 0.15; cy += (ty - cy) * 0.15;
+      cursor.style.left = cx - 10 + 'px'; cursor.style.top = cy - 10 + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+    document.querySelectorAll('button, a, .tilt-card, .web-card').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('expanded'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('expanded'));
+    });
+
+    const canvas = document.getElementById('hero-canvas');
+    const ctx = canvas.getContext('2d');
+    function resizeCanvas() { canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight; }
+    resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+    const orbs = Array.from({length: 18}, () => ({
+      x: Math.random() * 1920, y: Math.random() * 1080,
+      r: Math.random() * 80 + 30, vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.3,
+      hue: 260 + Math.random() * 40
+    }));
+    function drawOrbs() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      orbs.forEach(o => {
+        o.x += o.vx; o.y += o.vy;
+        if (o.x < -100) o.x = canvas.width + 100;
+        if (o.x > canvas.width + 100) o.x = -100;
+        if (o.y < -100) o.y = canvas.height + 100;
+        if (o.y > canvas.height + 100) o.y = -100;
+        const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
+        g.addColorStop(0, `hsla(${o.hue}, 80%, 60%, 0.4)`);
+        g.addColorStop(1, `hsla(${o.hue}, 80%, 40%, 0)`);
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+        ctx.fillStyle = g; ctx.fill();
+      });
+      requestAnimationFrame(drawOrbs);
+    }
+    drawOrbs();
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach((e, i) => { if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i * 80); observer.unobserve(e.target); } });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    document.querySelectorAll('.tilt-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(800px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale(1.05)`;
+      });
+      card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+    });
+
+    document.querySelectorAll('.magnetic-btn').forEach(btn => {
+      btn.addEventListener('mousemove', e => {
+        const r = btn.getBoundingClientRect();
+        const x = (e.clientX - r.left - r.width / 2) * 0.2;
+        const y = (e.clientY - r.top - r.height / 2) * 0.2;
+        btn.style.transform = `translate(${x}px, ${y}px)`;
+      });
+      btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+      btn.addEventListener('click', e => {
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        ripple.style.width = ripple.style.height = '40px';
+        const r = btn.getBoundingClientRect();
+        ripple.style.left = e.clientX - r.left - 20 + 'px';
+        ripple.style.top = e.clientY - r.top - 20 + 'px';
+        btn.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+      });
+    });
+
+
+    document.getElementById('contact-form').addEventListener('submit', function() {
+      // Show success message briefly before Formsubmit redirects
+      document.getElementById('form-success').classList.remove('hidden');
+    });
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');  
+    const hb1 = document.getElementById('hb1');
+    const hb2 = document.getElementById('hb2');
+    const hb3 = document.getElementById('hb3');
+    
+    mobileBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      if (mobileMenu.classList.contains('hidden')) {
+        hb1.style.transform = 'translateY(0) rotate(0)';
+        hb2.style.opacity = '1';
+        hb3.style.transform = 'translateY(0) rotate(0)';
+      } else {
+        hb1.style.transform = 'translateY(6px) rotate(45deg)';
+        hb2.style.opacity = '0';
+        hb3.style.transform = 'translateY(-6px) rotate(-45deg)';
+      }
+    });
+
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        hb1.style.transform = 'translateY(0) rotate(0)';
+        hb2.style.opacity = '1';
+        hb3.style.transform = 'translateY(0) rotate(0)';
+      });
+    });
+
+    // --- Interactive 3D Skills Sphere Simulation with Matter.js ---
+    const skillsList = [
+      "Web Developer", "Video Editor", "Photo Editor", "Logo Designer",
+      "Poster Creator", "UI/UX Designer", "Content Creator", "Freelancer",
+      "Social Media Manager", "Creative Editor"
+    ];
+
+    const skillsContainer = document.getElementById('skills-container');
+    const { Engine, Render, Runner, World, Bodies, Mouse, MouseConstraint } = Matter;
+
+    const engine = Engine.create();
+    const world = engine.world;
+
+    let sRect = skillsContainer.getBoundingClientRect();
+    
+    // Add boundaries so balls don't fall out
+    const wallOptions = { isStatic: true, render: { visible: false } };
+    const ground = Bodies.rectangle(sRect.width / 2, sRect.height + 50, sRect.width * 2, 100, wallOptions);
+    const leftWall = Bodies.rectangle(-50, sRect.height / 2, 100, sRect.height * 2, wallOptions);
+    const rightWall = Bodies.rectangle(sRect.width + 50, sRect.height / 2, 100, sRect.height * 2, wallOptions);
+    World.add(world, [ground, leftWall, rightWall]);
+
+    const skillBalls = [];
+
+    skillsList.forEach((skill, i) => {
+      const radius = window.innerWidth < 768 ? 45 + Math.random() * 15 : 60 + Math.random() * 20;
+      
+      const x = Math.random() * (sRect.width - radius * 2) + radius;
+      const y = -Math.random() * 500 - 100; // Start above container to fall in
+
+      const body = Bodies.circle(x, y, radius, {
+        restitution: 0.6, // Bounciness
+        friction: 0.05,
+        density: 0.04
+      });
+
+      World.add(world, body);
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'absolute top-0 left-0 pointer-events-none z-10';
+      wrapper.style.width = (radius * 2) + 'px';
+      wrapper.style.height = (radius * 2) + 'px';
+      wrapper.style.perspective = '1000px';
+
+      const ball = document.createElement('div');
+      ball.className = 'w-full h-full rounded-full flex items-center justify-center text-center font-bold text-xs md:text-sm shadow-[0_8px_32px_rgba(108,59,255,0.2)] border border-white/40 cursor-grab pointer-events-auto transition-shadow duration-300 relative overflow-hidden';
+      ball.style.background = 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(108,59,255,0.3) 50%, rgba(108,59,255,0.8) 100%)';
+      ball.style.backdropFilter = 'blur(10px)';
+      ball.style.color = '#4c1d95';
+      ball.style.fontWeight = '800';
+      ball.innerText = skill;
+
+      const highlight = document.createElement('div');
+      highlight.className = 'absolute top-[5%] left-[15%] w-[40%] h-[20%] rounded-full bg-white/50 rotate-[-15deg] blur-[2px] pointer-events-none';
+      ball.appendChild(highlight);
+
+      wrapper.appendChild(ball);
+      skillsContainer.appendChild(wrapper);
+
+      ball.addEventListener('mousedown', () => ball.style.cursor = 'grabbing');
+      ball.addEventListener('mouseup', () => ball.style.cursor = 'grab');
+      ball.addEventListener('mouseenter', () => ball.style.boxShadow = '0 0 40px rgba(108,59,255,0.8), inset 0 0 20px rgba(255,255,255,0.6)');
+      ball.addEventListener('mouseleave', () => ball.style.boxShadow = '0 8px 32px rgba(108,59,255,0.2)');
+
+      skillBalls.push({ body, wrapper, ball, radius });
+    });
+
+    // Add mouse interaction for drag and drop
+    const mouse = Mouse.create(skillsContainer);
+    const mouseConstraint = MouseConstraint.create(engine, {
+      mouse: mouse,
+      constraint: {
+        stiffness: 0.2,
+        render: { visible: false }
+      }
+    });
+    World.add(world, mouseConstraint);
+
+    // Ensure scrolling still works when dragging outside balls
+    mouseConstraint.mouse.element.removeEventListener("mousewheel", mouseConstraint.mouse.mousewheel);
+    mouseConstraint.mouse.element.removeEventListener("DOMMouseScroll", mouseConstraint.mouse.mousewheel);
+
+    let runner;
+    function startPhysics() {
+      if (!runner) {
+        runner = Runner.create();
+        Runner.run(runner, engine);
+
+        Matter.Events.on(engine, 'afterUpdate', function() {
+          skillBalls.forEach(b => {
+            b.wrapper.style.transform = `translate(${b.body.position.x - b.radius}px, ${b.body.position.y - b.radius}px)`;
+          });
+        });
+      }
+    }
+
+    function stopPhysics() {
+      if (runner) {
+        Runner.stop(runner);
+        runner = null;
+      }
+    }
+
+    const skillsObserver = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        startPhysics();
+      } else {
+        stopPhysics();
+      }
+    });
+    skillsObserver.observe(skillsContainer);
+
+    window.addEventListener('resize', () => {
+      sRect = skillsContainer.getBoundingClientRect();
+      Matter.Body.setPosition(ground, { x: sRect.width / 2, y: sRect.height + 50 });
+      Matter.Body.setPosition(rightWall, { x: sRect.width + 50, y: sRect.height / 2 });
+    });
+
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f6d6d57e0997e91',t:'MTc3Nzk1OTgwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body></html>
